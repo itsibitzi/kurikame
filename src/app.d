@@ -1,4 +1,4 @@
-module kurikame.main;
+module main;
 
 import core.thread;
 import kurikame.config;
@@ -10,6 +10,8 @@ import std.conv;
 import std.stdio;
 import std.string;
 
+import luad.all;
+
 void main()
 {
 	IrcSocket irc = new IrcSocket(Config.Server, Config.Port);
@@ -18,7 +20,7 @@ void main()
 		irc.Disconnect();
 	}
 
-	loadScripts(irc);
+	initialLoadScripts(irc);
 
 	irc.Connect();
 	irc.Nick(Config.Nick);

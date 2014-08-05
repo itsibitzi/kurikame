@@ -1,0 +1,8 @@
+{
+	"name": "kurikame",
+	"description": "IRC boat",
+	"authors": ["currysoup"],
+	"dependencies": {
+		"luad": "~master"
+	}
+}

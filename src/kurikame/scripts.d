@@ -1,16 +1,31 @@
 module kurikame.scripts;
 
+import kurikame.config;
 import kurikame.ircsocket;
 import kurikame.log;
 import kurikame.message;
+import luad.all;
 import std.algorithm;
+import std.file;
 import std.string;
 
-public void loadScripts(IrcSocket socket)
+private Script[] scripts;
+
+public void initialLoadScripts(IrcSocket socket)
 {
 	scripts ~= new EchoScript(socket);
+	loadLuaScripts(socket);
+}
 
-	// load up lua ;3
+public void loadLuaScripts(IrcSocket socket)
+{
+	auto files = dirEntries(Config.ScriptsDirectory, SpanMode.breadth).filter!(entry => isFile(entry));
+
+	foreach (string file; files)
+	{
+		// Unsafe ~ might just explode if there is a screwy script
+		scripts ~= new LuaScript(socket, file);
+	}
 }
 
 public void processWithScripts(Message message)
@@ -24,9 +39,6 @@ public void processWithScripts(Message message)
 	}
 }
 
-private Script[] scripts;
-
-// Base class of scripts
 private abstract class Script
 {
 	protected:
@@ -55,10 +67,49 @@ private abstract class Script
 		}
 }
 
-// TODO : Add lua script support
+final class LuaScript : Script
+{
+	private:
+		string key;
+		bool admin;
+		LuaFunction workFunction;
+
+	protected:
+		@property override string keyword()
+		{
+			return key;
+		}
+
+		@property override bool adminOnly()
+		{
+			return admin;
+		}
+
+		override void doWork(Message message)
+		{
+			if (message.Type == MessageType.PrivateMessage)
+			{
+				string value = workFunction.call!string(message.MessageBody);
+				socket.SendMessage(message.Destination, value);
+			}
+		}
+
+	public:
+		this(IrcSocket socket, string luaFile)
+		{
+			super(socket);
+			auto lua = new LuaState();
+			lua.openLibs();
+			lua.doFile(luaFile);
+
+			key          = lua.get!string("keyword");
+			admin        = lua.get!bool("adminOnly");
+			workFunction = lua.get!LuaFunction("doWork");
+		}
+}
 
 // Any hardcoded message scripts can be added below
-private class EchoScript : Script
+private final class EchoScript : Script
 {
 	protected:
 		@property override string keyword()
@@ -78,6 +129,7 @@ private class EchoScript : Script
 				socket.SendMessage(message.Destination, message.MessageBody);
 			}
 		}
+
 	public:
 		this(IrcSocket socket)
 		{

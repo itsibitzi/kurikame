@@ -18,6 +18,7 @@ static:
 		string[] channels;
 
 		string   homeDirectory;
+		string   scriptsDirectory;
 
 		string[] admins;
 
@@ -25,6 +26,7 @@ static:
 		{
 			// Need a place to look for the config files, target server and what not.
 			homeDirectory = to!string(getenv("KURIKAME_HOME")).dup;
+			scriptsDirectory = homeDirectory ~ "/scripts";
 
 			auto lines = readText(homeDirectory ~ "/etc/config").splitLines();
 
@@ -60,7 +62,6 @@ static:
 					break;
 				default:
 					throw new Exception("Invalid config key: " ~ key);
-					break;
 			}
 		}
 
@@ -88,6 +89,11 @@ static:
 		@property auto Admins()
 		{
 			return admins;
+		}
+
+		@property auto ScriptsDirectory()
+		{
+			return scriptsDirectory;
 		}
 }
 
