@@ -1,4 +1,4 @@
 kurigohan_and_kamehameha
 ------------------------
 
-IRC boat ~ yolo
+IRC bot written in D with support for Lua scripts.
